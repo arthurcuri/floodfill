@@ -126,4 +126,138 @@ Controles principais:
 
 Caso esteja em um ambiente headless, utilize apenas o modo CLI (`floodfill.py`).
 
+## Formato da Entrada
 
+```
+n m
+<n linhas com m inteiros>
+x y
+```
+
+- `n, m`: dimensões do grid.
+- cada célula recebe `0`, `1` ou `>=2`.
+- `x y`: coordenadas zero-based do ponto inicial.
+- Linha em branco ou com `#` é ignorada, permitindo comentários.
+
+## Explicação Detalhada do Flood Fill
+
+1. **Ponto inicial**: é validado e, se livre, inicia o preenchimento.
+2. **BFS**: utilizamos uma fila (`collections.deque`). A cada célula removida, examinamos quatro vizinhos (norte, sul, leste, oeste).
+3. **Coloração incremental**: a função `reserve_color` garante que a cor a ser usada não conflite com valores existentes.
+4. **Obstáculos**: células com `1` nunca entram na fila; valores `>=2` são tratados como paredes lógicas.
+5. **Loop global**: depois que a fila esvazia, percorremos todo o grid para localizar novos zeros e repetimos o processo com outra cor.
+
+Esse método evita trabalho redundante e mantém os contornos de cada região perfeitamente delimitados.
+
+## Exemplos de Entrada e Saída
+
+### Exemplo 1 – Grade 4x5
+
+```
+Grid inicial:
+0 0 1 0 0
+0 1 1 0 0
+0 0 1 1 1
+1 1 0 0 0
+
+Coordenadas iniciais: 0 0
+```
+
+```
+Grid preenchido:
+2 2 1 3 3
+2 1 1 3 3
+2 2 1 1 1
+1 1 4 4 4
+
+#regioes=3
+```
+
+### Exemplo 2 – Grade 4x5 com gargalo central
+
+```
+Grid inicial:
+0 1 0 0 1
+0 1 0 0 1
+0 1 1 1 1
+0 0 0 1 0
+
+Coordenadas iniciais: 0 2
+```
+
+```
+Grid preenchido:
+3 1 2 2 1
+3 1 2 2 1
+3 1 1 1 1
+3 3 3 1 4
+
+#regioes=3
+```
+
+### Exemplo 3 – Arquivo `examples/basic.txt`
+
+```
+5 6
+0 0 1 0 0 0
+0 1 1 0 1 0
+0 0 1 0 1 0
+1 1 1 1 1 1
+0 0 1 0 0 0
+0 0
+```
+
+Resultado após execução:
+
+```
+2 2 1 3 3 3
+2 1 1 3 1 3
+2 2 1 3 1 3
+1 1 1 1 1 1
+4 4 1 5 5 5
+
+#regioes=4
+```
+
+## Análise de Complexidade
+
+### Contagem de Operações
+
+- Cada célula é enfileirada e desenfileirada no máximo uma vez.
+- Cada aresta (vizinho ortogonal) é checada apenas quando a célula correspondente é processada.
+
+Portanto, o número de operações é proporcional ao número de células `n * m`, resultando em **complexidade temporal O(n·m)**.
+
+### Complexidade Espacial
+
+- A fila armazena, no pior caso, todas as células de uma região, logo o espaço adicional é **O(t)**, onde `t` é o tamanho da maior região.
+- A varredura completa consome apenas espaço constante extra.
+
+### Comparação com Abordagens Ingênuas
+
+| Abordagem                     | Temporal | Comparações/visitas           | Espacial |
+|------------------------------|----------|-------------------------------|----------|
+| DFS/BFS por região (implementada) | O(n·m)   | Cada célula visitada 1 vez      | O(t)     |
+| Varredura ingênua recomeçando a BFS sempre do topo | O(n·m·k) | Reprocessa regiões já coloridas | O(t)     |
+
+`k` representa o número de regiões. A abordagem atual evita reinicializações desnecessárias.
+
+## Fluxograma Simplificado
+
+```mermaid
+flowchart TD
+    A[Ler a entrada] --> B{BFS na origem?}
+    B -- "não" --> C[Grid inicial]
+    B -- "sim" --> D[Pintar região de origem]
+    D --> E{Existem zeros?}
+    E -- "não" --> F[Grid final]
+    E -- "sim" --> G[Reservar nova cor]
+    G --> H[BFS na nova região]
+    H --> E
+```
+
+## Autores
+
+- **Nome**: Arthur Kramberger, Lucas Cerqueira, Helio Ernesto, Mateus Faissal
+- **Disciplina**: Fundamentos de Projeto e Análise de Algoritmos
+- **Data**: Novembro de 2025
